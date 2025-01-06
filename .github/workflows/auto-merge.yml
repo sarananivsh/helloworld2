@@ -5,7 +5,7 @@ on:
     types:
       - labeled
     branches:
-      - main  # Replace with your target branch if necessary
+      - main  # Make sure this matches the branch your PR targets
 
 jobs:
   auto-merge:
@@ -15,12 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Log PR information
-        run: |
-          echo "PR Labels: ${{ github.event.pull_request.labels }}"
-          echo "PR Mergeable State: ${{ github.event.pull_request.mergeable_state }}"
-          echo "PR Draft Status: ${{ github.event.pull_request.draft }}"
-      
       - name: Check if PR has 'dependencies' label and is mergeable
         uses: actions/github-script@v6
         with:
@@ -36,6 +30,6 @@ jobs:
 
       - name: Auto merge PR if eligible
         if: ${{ steps.check.outputs.result == 'true' }}
-        uses: peter-evans/auto-merge@v2
+        uses: github-actions/merge@v2
         with:
-          merge-method: merge  # Change to 'squash' or 'rebase' if preferred
+          merge-method: merge  # Use 'squash' or 'rebase' if preferred
