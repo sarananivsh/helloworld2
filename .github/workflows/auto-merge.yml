@@ -1,17 +1,41 @@
-name: Test GitHub Actions Workflow
+name: Auto Merge PR if 'dependencies' label is present
 
 on:
-  push:
+  pull_request:
+    types:
+      - labeled
     branches:
-      - main  # This will trigger the workflow on push to the 'main' branch
+      - main  # Replace with your target branch if necessary
 
 jobs:
-  test-job:
+  auto-merge:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Print message
-        run: echo "GitHub Actions is working!"
+      - name: Log PR information
+        run: |
+          echo "PR Labels: ${{ github.event.pull_request.labels }}"
+          echo "PR Mergeable State: ${{ github.event.pull_request.mergeable_state }}"
+          echo "PR Draft Status: ${{ github.event.pull_request.draft }}"
+      
+      - name: Check if PR has 'dependencies' label and is mergeable
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (pr.labels.some(label => label.name === 'dependencies') && pr.mergeable_state === 'clean' && !pr.draft) {
+              console.log('PR is labeled with "dependencies" and is mergeable. Proceeding with auto-merge.');
+              return true;
+            } else {
+              console.log('PR is not labeled with "dependencies" or is not mergeable.');
+              return false;
+            }
+
+      - name: Auto merge PR if eligible
+        if: ${{ steps.check.outputs.result == 'true' }}
+        uses: peter-evans/auto-merge@v2
+        with:
+          merge-method: merge  # Change to 'squash' or 'rebase' if preferred
