@@ -1,11 +1,13 @@
-name: Auto Merge PR if 'dependencies' label is present
+name: Auto Merge PR and Delete Branch if 'dependencies' label is present
 
 on:
   pull_request:
     types:
       - labeled
+      - synchronize
+      - opened
     branches:
-      - main  # Ensure this matches the branch your PR targets
+      - main  # Adjust this for your default branch (e.g., 'main', 'develop', etc.)
 
 jobs:
   auto-merge:
@@ -13,36 +15,23 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Check if PR has 'dependencies' label and is mergeable
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const pr = context.payload.pull_request;
+      - name: Check if PR has 'dependencies' label
+        if: contains(github.event.pull_request.labels.*.name, 'dependencies')
+        run: echo "PR has 'dependencies' label. Proceeding with merge."
 
-            // Log the PR details for debugging
-            console.log('PR details:', pr);
-            console.log('PR mergeable state:', pr.mergeable_state);
-            console.log('PR draft status:', pr.draft);
+      - name: Merge PR if label is present
+        if: contains(github.event.pull_request.labels.*.name, 'dependencies')
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} --merge --admin --auto
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            // Check if PR has 'dependencies' label and is mergeable
-            if (pr.labels.some(label => label.name === 'dependencies') && pr.mergeable_state === 'clean' && !pr.draft) {
-              console.log('PR is labeled with "dependencies" and is mergeable. Proceeding with auto-merge.');
-
-              // Use the github context directly to merge the PR
-              try {
-                const mergeResponse = await github.rest.pulls.merge({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: pr.number,
-                  commit_title: `Auto-merge PR #${pr.number}`,
-                  merge_method: 'merge',  // You can use 'squash' or 'rebase' if preferred
-                });
-                console.log('PR merged successfully:', mergeResponse);
-              } catch (error) {
-                console.error('Error merging PR:', error);
-              }
-            } else {
-              console.log('PR is not labeled with "dependencies" or is not mergeable.');
-            }
+      - name: Delete the branch after merge
+        if: contains(github.event.pull_request.labels.*.name, 'dependencies')
+        run: |
+          # Delete the branch associated with the PR
+          gh pr view ${{ github.event.pull_request.number }} --json headRefName -q '.headRefName' | xargs -I {} gh api -X DELETE /repos/${{ github.repository }}/git/refs/heads/{}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
