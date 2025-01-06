@@ -1,22 +1,17 @@
-name: Auto Merge
+name: Test GitHub Actions Workflow
 
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+  push:
+    branches:
+      - main  # This will trigger the workflow on push to the 'main' branch
 
 jobs:
-  auto-merge:
+  test-job:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Auto-merge PR if it meets conditions
-        uses: peter-evans/auto-merge@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          merge_method: squash  # Options are 'merge', 'squash', or 'rebase'
+      - name: Print message
+        run: echo "GitHub Actions is working!"
