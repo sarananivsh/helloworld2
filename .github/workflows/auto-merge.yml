@@ -21,6 +21,11 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
 
+            // Log the PR details for debugging
+            console.log('PR details:', pr);
+            console.log('PR mergeable state:', pr.mergeable_state);
+            console.log('PR draft status:', pr.draft);
+
             // Check if PR has 'dependencies' label and is mergeable
             if (pr.labels.some(label => label.name === 'dependencies') && pr.mergeable_state === 'clean' && !pr.draft) {
               console.log('PR is labeled with "dependencies" and is mergeable. Proceeding with auto-merge.');
