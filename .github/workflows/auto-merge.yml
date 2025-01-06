@@ -20,8 +20,8 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            
-            // Use the GitHub API client directly from the github context
+
+            // GitHub API client is automatically available through 'github' object
             const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
 
             // Check if PR has 'dependencies' label and is mergeable
