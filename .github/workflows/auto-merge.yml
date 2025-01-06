@@ -22,14 +22,16 @@ jobs:
             const pr = context.payload.pull_request;
             if (pr.labels.some(label => label.name === 'dependencies') && pr.mergeable_state === 'clean' && !pr.draft) {
               console.log('PR is labeled with "dependencies" and is mergeable. Proceeding with auto-merge.');
-              return true;
+              // Auto merge PR using GitHub API
+              const mergeResponse = await github.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                commit_title: `Auto-merge PR #${pr.number}`,
+                merge_method: 'merge',  // You can use 'squash' or 'rebase' if preferred
+              });
+              console.log('PR merged:', mergeResponse);
             } else {
               console.log('PR is not labeled with "dependencies" or is not mergeable.');
-              return false;
             }
-
-      - name: Auto merge PR if eligible
-        if: ${{ steps.check.outputs.result == 'true' }}
-        uses: github-actions/merge@v2
-        with:
-          merge-method: merge  # Use 'squash' or 'rebase' if preferred
+      
