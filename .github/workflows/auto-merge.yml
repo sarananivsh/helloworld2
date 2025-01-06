@@ -19,10 +19,10 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            const { getOctokit } = require('@actions/github'); // Correctly require Octokit
             const pr = context.payload.pull_request;
 
-            // GitHub API client is automatically available through 'github' object
-            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            const octokit = getOctokit(process.env.GITHUB_TOKEN); // Initialize octokit
 
             // Check if PR has 'dependencies' label and is mergeable
             if (pr.labels.some(label => label.name === 'dependencies') && pr.mergeable_state === 'clean' && !pr.draft) {
