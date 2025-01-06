@@ -19,18 +19,15 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const { getOctokit } = require('@actions/github'); // Correctly require Octokit
             const pr = context.payload.pull_request;
-
-            const octokit = getOctokit(process.env.GITHUB_TOKEN); // Initialize octokit
 
             // Check if PR has 'dependencies' label and is mergeable
             if (pr.labels.some(label => label.name === 'dependencies') && pr.mergeable_state === 'clean' && !pr.draft) {
               console.log('PR is labeled with "dependencies" and is mergeable. Proceeding with auto-merge.');
 
-              // Auto merge PR using GitHub API
+              // Use the github context directly to merge the PR
               try {
-                const mergeResponse = await octokit.pulls.merge({
+                const mergeResponse = await github.rest.pulls.merge({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   pull_number: pr.number,
