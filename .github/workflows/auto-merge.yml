@@ -7,7 +7,11 @@ on:
       - synchronize
       - opened
     branches:
-      - main  # Adjust this for your default branch (e.g., 'main', 'develop', etc.)
+      - main  # Adjust to your branch name
+
+permissions:
+  contents: write  # Required for merging
+  pull-requests: write  # Grant permissions to merge PRs
 
 jobs:
   auto-merge:
@@ -25,13 +29,5 @@ jobs:
         if: contains(github.event.pull_request.labels.*.name, 'dependencies')
         run: |
           gh pr merge ${{ github.event.pull_request.number }} --merge --auto --delete-branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete the branch after merge
-        if: contains(github.event.pull_request.labels.*.name, 'dependencies')
-        run: |
-          # Delete the branch associated with the PR
-          gh pr view ${{ github.event.pull_request.number }} --json headRefName -q '.headRefName' | xargs -I {} gh api -X DELETE /repos/${{ github.repository }}/git/refs/heads/{}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
