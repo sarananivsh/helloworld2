@@ -1,11 +1,11 @@
-name: Auto Merge PR if 'dependencies' label is present
+name: Auto Merge
 
 on:
   pull_request:
     types:
-      - labeled
-    branches:
-      - main
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   auto-merge:
@@ -15,21 +15,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Check if PR has 'dependencies' label and is mergeable
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            if (pr.labels.some(label => label.name === 'dependencies') && pr.mergeable_state === 'clean' && !pr.draft) {
-              console.log('PR is labeled with "dependencies" and is mergeable. Proceeding with auto-merge.');
-              return true;
-            } else {
-              console.log('PR is not labeled with "dependencies" or is not mergeable.');
-              return false;
-            }
-
-      - name: Auto merge PR if eligible
-        if: ${{ steps.check.outputs.result == 'true' }}
+      - name: Auto-merge PR if it meets conditions
         uses: peter-evans/auto-merge@v2
         with:
-          merge-method: merge  # Use 'squash' or 'rebase' if preferred
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          merge_method: squash  # Options are 'merge', 'squash', or 'rebase'
